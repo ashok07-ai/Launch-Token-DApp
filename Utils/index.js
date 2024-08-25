@@ -5,7 +5,8 @@ import {
   TOKEN_ABI,
   TOKEN_ADDRESS,
 } from "../Context/constants";
-import { Web3Modal } from "web3modal";
+import Web3Modal from 'web3Modal';
+
 
 export const checkIfWalletConnected = async () => {
   try {
@@ -40,13 +41,13 @@ export const connectWallet = async () => {
 
 // TOKEN_CONTRACT
 const fetchTokenContract = (signerOrProvider) => {
-  new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider);
+  return new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider);
 };
 
 export const connectingTokenContract = async () => {
   try {
-    const web3modal = new Web3Modal();
-    const connection = await web3modal.connect();
+    const web3ModalInstance = new Web3Modal();
+    const connection = await web3ModalInstance.connect();
     const provider = new ethers.providers.Web3Provider(connection);
     const signer = provider.getSigner();
     const contract = fetchTokenContract(signer);
