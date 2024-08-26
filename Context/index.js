@@ -23,7 +23,6 @@ export const StateContextProvider = ({ children }) => {
   const [currentHolder, setCurrentHolder] = useState("");
 
   const fetchInitialData = async () => {
-    console.log("hello");
     try {
       // GET USER ACCOUNT
       const account = await checkIfWalletConnected();
@@ -35,7 +34,6 @@ export const StateContextProvider = ({ children }) => {
 
       // TOKEN CONTRACT
       const TOKEN_CONTRACT = await connectingTokenContract();
-      console.log(TOKEN_CONTRACT)
       let tokenBalance;
       if (account) {
         tokenBalance = await TOKEN_CONTRACT.balanceOf(account);
@@ -60,10 +58,50 @@ export const StateContextProvider = ({ children }) => {
         tokenOwnerofContract: tokenOwnerofContract,
         tokenTotalSupply: ethers.utils.formatEther(tokenTotalSupply.toString()),
         tokenBalance: ethers.utils.formatEther(tokenBalance.toString()),
-        tokenHolders: tokenHolders.toNumber()
+        tokenHolders: tokenHolders.toNumber(),
+      };
+      setNativeToken(nativeToken);
+
+      // GETTING TOKEN HOLDERS DATA
+      const getTokenHolder = await TOKEN_CONTRACT.getTokenHolder();
+      setTokenHolders(getTokenHolder);
+
+      if (account) {
+        const getTokenHolderData = await TOKEN_CONTRACT.getTokenHolderData(
+          account
+        );
+
+        const currentHolder = {
+          tokenId: getTokenHolderData[0].toNumber(),
+          from: getTokenHolderData[1],
+          to: getTokenHolderData[2],
+          totalToken: ethers.utils.formatEther(
+            getTokenHolderData[3].toString()
+          ),
+          tokenHolder: getTokenHolderData[4],
+        };
+        setCurrentHolder(currentHolder);
       }
 
-      setNativeToken(nativeToken)
+      // TOKEN SALE CONTRACT
+      const TOKEN_SALE_CONTRACT = await connectingTokenSaleContract();
+      const tokenPrice = await TOKEN_SALE_CONTRACT.tokenPrice();
+      const tokenSold = await TOKEN_SALE_CONTRACT.totalTokenSold();
+      const tokenSaleBalance = await TOKEN_CONTRACT.balanceOf(
+        "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+      );
+
+      const tokenSale = {
+        tokenPrice: ethers.utils.formatEther(tokenPrice.toString()),
+        tokenSold: tokenSold.toNumber(),
+        tokenSaleBalance: ethers.utils.formatEther(tokenSaleBalance.toString()),
+      };
+
+      setTokenSale(tokenSale);
+      console.log(tokenSale, "tokenSale");
+      console.log(currentHolder, "currenctholder");
+      console.log(nativeToken, "native token");
+
     } catch (error) {
       console.log(error);
     }
@@ -72,6 +110,43 @@ export const StateContextProvider = ({ children }) => {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // BUY TOKEN
+  const buyToken = async (nToken) => {
+    try {
+      const amount = ethers.utils.parseUnits(nToken.toString(), "ether");
+      const contract = await connectingTokenSaleContract();
+
+      const buying = await contract.buyToken(nToken, {
+        value: amount.toString(),
+      });
+
+      await buying.wait();
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // TRANSFER NATIVE TOKEN
+  const trasnferNativeToken = async () => {
+    try {
+      const TOKEN_SALE_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+      const TOKEN_AMOUNT = 500;
+      const tokens = TOKEN_AMOUNT.toString();
+      const transferAmount = ethers.utils.parseEther(tokens);
+
+      const contract = await connectingTokenContract();
+      const transaction = await contract.transfer(
+        TOKEN_SALE_ADDRESS,
+        transferAmount
+      );
+      await transaction.wait();
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <StateContext.Provider value={{ DAPP }}>{children}</StateContext.Provider>
