@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 
 // INTERNAL IMPORT
 import {
-  CheckIfWalletConnected,
   connectWallet,
   connectingTokenContract,
   getBalance,
@@ -101,7 +100,6 @@ export const StateContextProvider = ({ children }) => {
       console.log(tokenSale, "tokenSale");
       console.log(currentHolder, "currenctholder");
       console.log(nativeToken, "native token");
-
     } catch (error) {
       console.log(error);
     }
@@ -149,7 +147,23 @@ export const StateContextProvider = ({ children }) => {
   };
 
   return (
-    <StateContext.Provider value={{ DAPP }}>{children}</StateContext.Provider>
+    <StateContext.Provider
+      value={{
+        trasnferNativeToken,
+        buyToken,
+        connectWallet,
+        setAddress,
+        DAPP,
+        currentHolder,
+        tokenSale,
+        tokenHolders,
+        nativeToken,
+        balance,
+        address,
+      }}
+    >
+      {children}
+    </StateContext.Provider>
   );
 };
 
